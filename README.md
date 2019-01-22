@@ -25,3 +25,7 @@ DeeplyEssential takes 6 parameters
 6. Name of the experiment
 
 <h4>Run code</h4>
+
+```
+$ python 
+```
