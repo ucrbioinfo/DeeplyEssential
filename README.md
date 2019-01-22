@@ -35,3 +35,5 @@ DeeplyEssential takes 6 parameters
 ```
 $ python main.py <essential gene dir> <non-essential gene dir> <cluster gene file> <dataset> -c <experiment name>
 ```
+
+The dataset are collected from [DEG](http://www.essentialgene.org/)
