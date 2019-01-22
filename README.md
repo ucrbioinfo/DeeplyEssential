@@ -27,7 +27,7 @@ DeeplyEssential takes 6 parameters
 5. Experiment option
 	- '-gp' for Gram Positive (GP) Dataset
 	- '-gn' for Gram Negative (GN) Dataset
-	- '-c' for GP + GN dataset 
+	- '-c' for GP + GN Dataset 
 6. Name of the experiment
 
 <h4>Run code</h4>
