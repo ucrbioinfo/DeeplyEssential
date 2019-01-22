@@ -36,4 +36,8 @@ DeeplyEssential takes 6 parameters
 $ python main.py <essential gene dir> <non-essential gene dir> <cluster gene file> <dataset> -c <experiment name>
 ```
 
-The dataset are collected from [DEG](http://www.essentialgene.org/). A sample for 
+The dataset are collected from [DEG](http://www.essentialgene.org/). 
+
+<h4>Output</h4>
+
+DeeplyEssential generates a report containing experiment name, basic statistics about the dataset and evaluation metics for each iteration of experiment. A sample (`sample_output.tab`) is provided.
