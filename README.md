@@ -14,8 +14,14 @@ DeeplyEssential is a Convolutional neural network for the identification of Esse
 <h3>Parameters</h3>
 
 DeeplyEssential takes 6 parameters
-1. Essential gene directory path
-2. Non Essential gene directory path
+1. Essential gene directory path. The directory contains
+	- A essential gene sequence file
+	- A essential protein sequence file
+	- An gene annotation file
+2. Non Essential gene directory path. This file contains
+	- A essential gene sequence file
+	- A essential protein sequence file
+	- An gene annotation file
 3. Clustered gene file path clusted by OrthoMCL
 4. Text file containing bacteria species information
 5. Experiment option
