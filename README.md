@@ -22,8 +22,8 @@ DeeplyEssential takes 6 parameters
 	- A essential gene sequence file
 	- A essential protein sequence file
 	- An gene annotation file
-3. Clustered gene file path clusted by OrthoMCL
-4. Text file containing bacteria species information
+3. Clustered gene file path clusted by OrthoMCL (sample given, `orthoMCL.txt`)
+4. Text file containing bacteria species information (sample given, `dataset.txt`)
 5. Experiment option
 	- '-gp' for Gram Positive (GP) Dataset
 	- '-gn' for Gram Negative (GN) Dataset
@@ -36,4 +36,4 @@ DeeplyEssential takes 6 parameters
 $ python main.py <essential gene dir> <non-essential gene dir> <cluster gene file> <dataset> -c <experiment name>
 ```
 
-The dataset are collected from [DEG](http://www.essentialgene.org/)
+The dataset are collected from [DEG](http://www.essentialgene.org/). A sample for 
