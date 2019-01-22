@@ -1,0 +1,31 @@
+Organism	Abbr.	NCBI_Accession_ID	GP/GN
+Acinetobacter baylyi ADP1	ABA	NC_005966	-
+Bacillus subtilis 168	BSU	NC_000964	-
+Bacteroides fragilis 638R	BFR	NC_016776	+
+Bacteroides thetaiotaomicron VPI-5482	BTH	NC_004663	-
+Burkholderia pseudomallei K96243	BPS	NC_006350	-
+Burkholderia thailandensis E264	BUT	NC_007651	-
+Campylobacter jejuni subsp. jejuni NCTC 11168 = ATCC 700819	CJE	NC_002163	-
+Caulobacter crescentus	CCR	NC_011916	-
+Escherichia coli MG1655 II	ECO	NC_000913	-
+Francisella novicida U112	FNO	NC_008601	-
+Haemophilus influenzae Rd KW20	HIN	NC_000907	-
+Helicobacter pylori 26695	HPY	NC_000915	-
+Mycobacterium tuberculosis H37Rv	MTU	NC_000962	+
+Mycoplasma genitalium G37	MGE	NC_000908	+
+Mycoplasma pulmonis UAB CTIP	MPU	NC_002771	+
+Porphyromonas gingivalis ATCC 33277	PGI	NC_010729	-
+Pseudomonas aeruginosa PAO1	PAE	NC_002516	-
+Pseudomonas aeruginosa UCBPP-PA14	PAU	NC_008463	-
+Salmonella enterica serovar Typhi	STY	NC_004631	-
+Salmonella enterica serovar Typhimurium SL1344	STS	NC_016810	-
+Salmonella enterica subsp. enterica serovar Typhimurium str. 14028S	SET	NC_016856	-
+Salmonella typhimurium LT2	SLT	NC_003197	-
+Shewanella oneidensis MR-1	SON	NC_004347	-
+Sphingomonas wittichii RW1	SWI	NC_009511	-
+Staphylococcus aureus N315	SAU	NC_002745	+
+Staphylococcus aureus NCTC 8325	SAN	NC_007795	+
+Streptococcus pyogenes MGAS5448	SPM	NC_007297	+
+Streptococcus pyogenes NZ131	SPZ	NC_011375	+
+Streptococcus sanguinis	SSA	NC_009009	+
+Vibrio cholerae N16961	VCH	NC_002505	-
