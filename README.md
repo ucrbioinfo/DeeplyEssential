@@ -10,3 +10,15 @@ DeeplyEssential is a Convolutional neural network for the identification of Esse
 4. pandas==0.22.0
 5. scikit-learn==0.19.1
 6. tensorflow==1.6.0
+
+<h3>Parameters</h3>
+
+DeeplyEssential takes 6 parameters
+1. Essential gene directory path
+2. Non Essential gene directory path
+3. Clustered gene file path clusted by OrthoMCL
+4. Text file containing bacteria species information
+5. Experiment option
+	- '-gp' for Gram Positive (GP) Dataset
+	- '-gn' for Gram Negative (GN) Dataset
+	- '-c' for GP + GN dataset 
