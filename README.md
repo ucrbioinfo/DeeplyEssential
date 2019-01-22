@@ -27,5 +27,5 @@ DeeplyEssential takes 6 parameters
 <h4>Run code</h4>
 
 ```
-$ python 
+$ python main.py <essential gene dir> <non-essential gene dir> <cluster gene file> <dataset> -c <experiment name>
 ```
