@@ -2,7 +2,7 @@ Experiment Name: DNN_complete_data_adadelta
 Number of training samples: 21432
 Number of validation samples: 2678
 Number of testing samples: 2680
-Number of features: 90
+Number of features: 89
 Iteration	ROC_AUC	Avg. Precision	Sensitivity	Specificity	PPV	Accuracy
 1	0.8462581651555036	0.8457489169904868	0.799267399267	0.736121673004	0.758692628651	0.76828358209
 2	0.8412145015947298	0.8430258070393619	0.805860805861	0.718631178707	0.748299319728	0.763059701493
