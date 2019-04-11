@@ -12,34 +12,20 @@ from keras.callbacks import ModelCheckpoint, EarlyStopping
 
 # parameter dictionary
 paramDict = {
-    'filter': 512,
-    'kernel': 8,
     'epoch': 100,
     'batchSize': 32,
     'dropOut': 0.3,
-    'layer1': 1024,
-    'layer2': 512,
-    'layer3': 128,
-    'learningRate': 0.01,
-    'decay': 1e-6,
-    'nesterov': True,
-    'momentum': 0.9,
     'loss': 'binary_crossentropy',
     'metrics': ['accuracy'],
     'activation1': 'relu',
     'activation2': 'sigmoid',
     'monitor': 'val_acc',  # param for checkpoint
-    'verbose': 0,
     'save_best_only': True,
     'mode': 'max'
 }
 
 optimizerDict = {
-    'sgd': SGD(paramDict['learningRate'], paramDict['nesterov'], paramDict['decay'], paramDict['momentum']),
-    'rmsprop': RMSprop(lr=0.001, rho=0.9, epsilon=None, decay=0.0),
     'adadelta': Adadelta(lr=1.0, rho=0.95, epsilon=None, decay=0.0),
-    'adam': Adam(lr=0.01, beta_1=0.9, beta_2=0.999, epsilon=None, decay=0.0, amsgrad=False),
-    'nadam': Nadam(lr=0.002, beta_1=0.9, beta_2=0.999, epsilon=None, schedule_decay=0.004)
 }
 
 
