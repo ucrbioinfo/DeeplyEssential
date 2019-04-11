@@ -2,6 +2,13 @@ import numpy as np
 import pandas as pd
 from sklearn.preprocessing import StandardScaler
 
+# mcl param dict
+mclParam = {
+    'lowerRange': 0.8,
+    'upperRange': 1.0
+}
+
+
 # returns the list of genes to be used
 def getGeneDict(accessionList, annotationDict):
     geneNameDict = dict()
@@ -60,6 +67,7 @@ def combineAndSplitData(EssentialGeneFeatTable, NonEssentialGeneFeatTable, train
     for i in range(corr.shape[0]):
         for j in range(i, corr.shape[1]):
             if (corr[i][j] >= 0.90 or corr[i][j] <= -0.90) and i != j:
+                print corr[i][j]
                 corr_feat_list.append([i, j])
 
     # calculating training, validation, testing data portion
