@@ -2,21 +2,6 @@ import numpy as np
 import pandas as pd
 from sklearn.preprocessing import StandardScaler
 
-# taxon dictionary
-taxonDict = {
-    'Bacillales': ['NC_000964', 'NC_002745', 'NC_007795'],
-    'Enterobacteriaceae': ['NC_000913', 'NC_004631', 'NC_003197'],
-    'Pseudomonadales': ['NC_005966', 'NC_008463'],
-    'Mycolasmatales': ['NC_000908', 'NC_002771']
-}
-
-# mcl param dict
-mclParam = {
-    'lowerRange': 0.8,
-    'upperRange': 1.0
-}
-
-
 # returns the list of genes to be used
 def getGeneDict(accessionList, annotationDict):
     geneNameDict = dict()
