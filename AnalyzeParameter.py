@@ -39,10 +39,6 @@ class ParameterProcessing(object):
 	def getNonEssentialGeneAnnotFilePath(self):
 		return self.non_essential_path + str('degannotation-np.dat')
 
-	# returns the file path for the non_essential gene MCL file
-	# def getNonEssentialMCLFilePath(self):
-	# 	return self.non_essential_path + str('non_essential_groups.txt')
-
 	# returns the file path for non_essential gene hit file
 	def getNonEssentialHitFilePath(self):
 		return self.non_essential_path + str('NonEssential_gene_hit_data.txt')

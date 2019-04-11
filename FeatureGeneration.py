@@ -65,12 +65,10 @@ class FeatureProcessing(object):
         self.EssentialGeneSeqInfo = read.getEssentialGeneSeqInfo()
         self.EssentialProteinSeqInfo = read.getEssentialProteinInfo()
         self.EssentialAnnotationInfo = read.getEssentialGeneAnnoInfo()
-        # self.EssentialMCLInfo = read.getEssentialMCLInfo()
 
         self.NonEssentialGeneSeqInfo = read.getNonEssentialGeneSeqInfo()
         self.NonEssentialProteinSeqInfo = read.getNonEssentialProteinInfo()
         self.NonEssentialAnnotationInfo = read.getNonEssentialGeneAnnoInfo()
-        # self.NonEssentialMCLInfo = read.getNonEssentialMCLInfo()
 
         # MCL info
         self.MCLStatDict = read.getMCLStatistics()
@@ -245,30 +243,6 @@ class FeatureProcessing(object):
 
             self.NonEssentialKmerFeatDict[seqName] = binnedSeqFeat
             self.NonEssentialGCContentFeatDict[seqName] = binnedGCFeat
-
-        # this part is to write kmer count and GC content for two class data
-        # fopen_e = open('imbalanced_data_Essential_kmer_count.txt', 'w')
-        # fopen_ne = open('imbalanced_data_NonEssential_kmer_count.txt', 'w')
-        #
-        # for kmer in EssentialKmerCount:
-        #     fopen_e.write(str(kmer) + '\t' + str((float(EssentialKmerCount[kmer])/len(self.EssentialGeneSeqInfo))) + '\n')
-        # fopen_e.close()
-        #
-        # for kmer in NonEssentialKmerCount:
-        #     fopen_ne.write(str(kmer) + '\t' + str((float(NonEssentialKmerCount[kmer])/len(self.NonEssentialGeneSeqInfo))) + '\n')
-        # fopen_ne.close()
-        #
-        # fopen_gc_e = open('imbalanced_data_Essential_GC.txt', 'w')
-        # fopen_gc_ne = open('imbalanced_data_NonEssential_GC.txt', 'w')
-        #
-        # for seqName in EssentialGCContent:
-        #     fopen_gc_e.write(str(seqName) + '\t' + str(EssentialGCContent[seqName]) + '\n')
-        # fopen_gc_e.close()
-        #
-        # for seqName in NonEssentialGCContent:
-        #     fopen_gc_ne.write(str(seqName) + '\t' + str(NonEssentialGCContent[seqName]) + '\n')
-        # fopen_gc_ne.close()
-
 
 # returns the GC content of a gene sequence
 def getGCContent(sequence):

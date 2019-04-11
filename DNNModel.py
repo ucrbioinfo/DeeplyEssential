@@ -1,5 +1,4 @@
 import math
-import os
 import numpy as np
 from sklearn.preprocessing import LabelEncoder
 from sklearn import metrics
@@ -7,15 +6,15 @@ from sklearn import metrics
 from keras.models import Sequential
 from keras.layers import Dense, Dropout, Flatten
 from keras.layers import Conv1D
-from keras.optimizers import SGD
+from keras.optimizers import SGD, RMSprop, Adadelta, Adam, Nadam
 from keras.utils import np_utils
-from keras.callbacks import ModelCheckpoint
+from keras.callbacks import ModelCheckpoint, EarlyStopping
 
 # parameter dictionary
 paramDict = {
     'filter': 512,
     'kernel': 8,
-    'epoch': 30,
+    'epoch': 100,
     'batchSize': 32,
     'dropOut': 0.3,
     'layer1': 1024,
@@ -28,7 +27,7 @@ paramDict = {
     'loss': 'binary_crossentropy',
     'metrics': ['accuracy'],
     'activation1': 'relu',
-    'activation2': 'softmax',
+    'activation2': 'sigmoid',
     'monitor': 'val_acc',  # param for checkpoint
     'verbose': 0,
     'save_best_only': True,
@@ -36,7 +35,11 @@ paramDict = {
 }
 
 optimizerDict = {
-    'sgd': SGD(paramDict['learningRate'], paramDict['nesterov'], paramDict['decay'], paramDict['momentum'])
+    'sgd': SGD(paramDict['learningRate'], paramDict['nesterov'], paramDict['decay'], paramDict['momentum']),
+    'rmsprop': RMSprop(lr=0.001, rho=0.9, epsilon=None, decay=0.0),
+    'adadelta': Adadelta(lr=1.0, rho=0.95, epsilon=None, decay=0.0),
+    'adam': Adam(lr=0.01, beta_1=0.9, beta_2=0.999, epsilon=None, decay=0.0, amsgrad=False),
+    'nadam': Nadam(lr=0.002, beta_1=0.9, beta_2=0.999, epsilon=None, schedule_decay=0.004)
 }
 
 
@@ -46,6 +49,11 @@ class BuildDNNModel(object):
         super(BuildDNNModel, self).__init__()
         self.data = data
         self.bins = bins
+
+        self.corr_feats = data.getCorrFeats()
+        self.feat_index_dict = dict()
+        self.feat_importance_dict = dict()
+
         self.evaluationInfo = dict()
 
         self.trainingData = data.getTrainingData()
@@ -64,27 +72,22 @@ class BuildDNNModel(object):
         self.numberOfFeatEachBin = math.floor(
             float(X_train.shape[1]) / bins)  # this is the number of attributed in each bin of matrix
 
-        # this function reshapes the data to the number of bins sizes
-        X_train_reshaped = reshapeDataToBinSize(X_train, int(self.numberOfFeatEachBin), self.bins)
-        X_valid_reshaped = reshapeDataToBinSize(X_valid, int(self.numberOfFeatEachBin), self.bins)
-        X_test_reshaped = reshapeDataToBinSize(X_test, int(self.numberOfFeatEachBin), self.bins)
-
         # reshaping class labels
         Y_train_reshaped = np_utils.to_categorical(Y_train, self.numberOfClasses)
         Y_valid_reshaped = np_utils.to_categorical(Y_valid, self.numberOfClasses)
         Y_test_reshaped = np_utils.to_categorical(Y_test, self.numberOfClasses)
 
         self.dataDict = {
-            'train': X_train_reshaped,
+            'train': X_train,
             'trainLabel': Y_train_reshaped,
-            'valid': X_valid_reshaped,
+            'valid': X_valid,
             'validLabel': Y_valid_reshaped,
-            'test': X_test_reshaped,
+            'test': X_test,
             'testLabel': Y_test_reshaped
         }
 
         self.evaluationInfo = buildAndRunModel(self.dataDict, int(self.numberOfFeatEachBin), self.bins,
-                                               self.numberOfClasses, f_tp, f_fp, f_th)
+                                                self.numberOfClasses, f_tp, f_fp, f_th)
 
     # returns a dictionary containing all evaluation statistics
     def getEvaluationStat(self):
@@ -130,10 +133,6 @@ def reshapeDataToBinSize(dataMatrix, numberOfFeatEachBin, bins):
     start = 0
     end = numberOfFeatEachBin
 
-    # ReshapedData[:, :, 0] = dataMatrix[:, :numberOfFeatEachBin]
-    # ReshapedData[:, :, 1] = dataMatrix[:, numberOfFeatEachBin:(numberOfFeatEachBin * 2)]
-    # ReshapedData[:, :, 2] = dataMatrix[:, (numberOfFeatEachBin * 2):(numberOfFeatEachBin * 3)]
-
     for i in range(1, bins + 1):
         ReshapedData[:, :, i - 1] = dataMatrix[:, start:end * i]
         start = end * i
@@ -151,32 +150,33 @@ def buildAndRunModel(dataDict, numberOfFeatEachBin, bins, numberOfClasses, f_tp,
 
     # building NN model
     model = Sequential()
-    model.add(Conv1D(paramDict['filter'],
-                     paramDict['kernel'],
-                     activation=paramDict['activation1'],
-                     input_shape=(numberOfFeatEachBin, bins)))
-    model.add(Flatten())
+    model.add(Dense(128, activation = paramDict['activation1'], input_shape = (numberOfFeatEachBin, )))
     model.add(Dropout(paramDict['dropOut']))
-    model.add(Dense(paramDict['layer1'], activation=paramDict['activation1']))
+    model.add(Dense(256, activation = paramDict['activation1']))
+    model.add(Dropout(paramDict['dropOut']))
+    model.add(Dense(512, activation = paramDict['activation1']))
+    model.add(Dropout(paramDict['dropOut']))
+    model.add(Dense(1024, activation = paramDict['activation1']))
+    model.add(Dropout(paramDict['dropOut']))
+    model.add(Dense(1024, activation=paramDict['activation1']))
+    model.add(Dropout(paramDict['dropOut']))
+    model.add(Dense(1024, activation=paramDict['activation1']))
+    model.add(Dropout(paramDict['dropOut']))
     model.add(Dense(numberOfClasses, activation=paramDict['activation2']))
 
-    model.compile(optimizer='sgd',
+    model.compile(optimizer=optimizerDict['adadelta'],
                   loss=paramDict['loss'],
                   metrics=paramDict['metrics'])
 
     # saving best model by validation accuracy
     filePath = 'weights.best.hdf5'
-    checkPoint = ModelCheckpoint(filePath,
-                                 monitor=paramDict['monitor'],
-                                 verbose=paramDict['verbose'],
-                                 save_best_only=paramDict['save_best_only'],
-                                 mode=paramDict['mode'])
-    callBackList = [checkPoint]
+    checkpointer = ModelCheckpoint(filepath=filePath, verbose=0, monitor='val_loss', save_best_only=True)
+    earlystopper = EarlyStopping(monitor='val_loss', patience=15, verbose=1)
 
     # fit the model to the training data and verify with validation data
     model.fit(trainData, trainLabel,
               epochs=paramDict['epoch'],
-              callbacks=callBackList,
+              callbacks=[checkpointer, earlystopper],
               batch_size=paramDict['batchSize'],
               shuffle=True,
               verbose=1,
@@ -184,7 +184,7 @@ def buildAndRunModel(dataDict, numberOfFeatEachBin, bins, numberOfClasses, f_tp,
 
     # load best model and compile
     model.load_weights('weights.best.hdf5')
-    model.compile(optimizer='sgd',
+    model.compile(optimizer=optimizerDict['adadelta'],
                   loss=paramDict['loss'],
                   metrics=paramDict['metrics'])
 
@@ -221,7 +221,7 @@ def buildAndRunModel(dataDict, numberOfFeatEachBin, bins, numberOfClasses, f_tp,
     # get TP, TN, FP, FN to calculate sensitivity, specificity, PPV and accuracy
     TP, TN, FP, FN = getTPTNValues(testLabelRev, testPredLabelRev)
 
-    sensitivity = float(TP) / float(TP + FP)
+    sensitivity = float(TP) / float(TP + FN)
     specificity = float(TN) / float(TN + FP)
     PPV = float(TP) / float(TP + FP)
     accuracy = float(TP + TN) / float(TP + FP + FN + TN)
@@ -233,7 +233,10 @@ def buildAndRunModel(dataDict, numberOfFeatEachBin, bins, numberOfClasses, f_tp,
         'sensitivity': sensitivity,
         'specificity': specificity,
         'PPV': PPV,
-        'accuracy': accuracy
+        'accuracy': accuracy,
+        'batch_size': paramDict['batchSize'],
+        'activation': paramDict['activation2'],
+        'dropout': paramDict['dropOut']
     }
 
     return evaluationInfo

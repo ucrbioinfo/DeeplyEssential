@@ -1,4 +1,5 @@
 import numpy as np
+import pandas as pd
 from sklearn.preprocessing import StandardScaler
 
 # taxon dictionary
@@ -28,20 +29,20 @@ def getGeneDict(accessionList, annotationDict):
 
 
 # returns MCL based essential and non essential gene list
-def getGenesFromMCLStat(MCLStatDict, combinedMCLDict, lower, upper):
+def getGenesFromMCLStat(MCLStatDict, combinedMCLDict, essentialGeneNameDict, nonEssentialGeneNameDict, lower, upper):
     mclEssentialGeneDict = dict()
     mclNonEssentialGeneDict = dict()
 
     for cluster in MCLStatDict:
-        # if MCLStatDict[cluster][4] < mclParam['lowerRange']:
-        # if mclParam['lowerRange'] < MCLStatDict[cluster][4] <= mclParam['upperRange']:
         if lower <= cluster <= upper:
             geneList = combinedMCLDict[cluster]
             for i in range(0, len(geneList)):
                 if 'DEG' in geneList[i]:
-                    mclEssentialGeneDict[geneList[i]] = True
+                    if geneList[i] in essentialGeneNameDict:
+                        mclEssentialGeneDict[geneList[i]] = True
                 elif 'DNEG' in geneList[i]:
-                    mclNonEssentialGeneDict[geneList[i]] = True
+                    if geneList[i] in nonEssentialGeneNameDict:
+                        mclNonEssentialGeneDict[geneList[i]] = True
 
     return mclEssentialGeneDict, mclNonEssentialGeneDict
 
@@ -61,6 +62,21 @@ def combineAndSplitData(EssentialGeneFeatTable, NonEssentialGeneFeatTable, train
     completeData = np.vstack((np.array(EssentialGeneFeatTable), np.array(NonEssentialGeneFeatTable)))
     completeResizedData = resizeData(EssentialGeneFeatTable, NonEssentialGeneFeatTable)
 
+    # calculate the correlation matrix
+    completeResizedData_df = pd.DataFrame(completeResizedData)
+
+    # for feature correlation analysis
+    corr = completeResizedData_df.corr()
+    #
+    # print min((corr.min()).tolist())    # -0.5817
+    #
+    corr_feat_list = list()
+
+    for i in range(corr.shape[0]):
+        for j in range(i, corr.shape[1]):
+            if (corr[i][j] >= 0.90 or corr[i][j] <= -0.90) and i != j:
+                corr_feat_list.append([i, j])
+
     # calculating training, validation, testing data portion
     validationProp, testingProp = float(1 - trainingProp) / 2, float(1 - trainingProp) / 2
 
@@ -77,14 +93,15 @@ def combineAndSplitData(EssentialGeneFeatTable, NonEssentialGeneFeatTable, train
     validationData = completeResizedData[trainingSize:(trainingSize + validationSize), :]
     testingData = completeResizedData[(trainingSize + validationSize):, :]
 
-    return trainingData, validationData, testingData
+    return trainingData, validationData, testingData, corr_feat_list
 
 
 class ProcessData(object):
 
-    def __init__(self, read, feat, trainingProp, option):
+    def __init__(self, read, feat, trainingProp, option, ExpName):
         super(ProcessData, self).__init__()
         self.feat = feat
+        self.ExpName = ExpName
 
         # define which set of genes to work with
         self.CompleteDataAccession = read.getCompleteListOrganismAccession()
@@ -94,7 +111,6 @@ class ProcessData(object):
         self.EssentialGeneSeqInfo = read.getEssentialGeneSeqInfo()
         self.EssentialProteinSeqInfo = read.getEssentialProteinInfo()
         self.EssentialAnnotationInfo = read.getEssentialGeneAnnoInfo()
-        # self.EssentialMCLInfo = read.getEssentialMCLInfo()
 
         self.NonEssentialGeneSeqInfo = read.getNonEssentialGeneSeqInfo()
         self.NonEssentialProteinSeqInfo = read.getNonEssentialProteinInfo()
@@ -119,31 +135,22 @@ class ProcessData(object):
         # Building training, validation and testing data from the mcl gene clusters. This data is build by combining
         # similar genes so a higher accuracy is expected.
         self.TrainMCLEssentialGeneNameDict, self.TrainMCLNonEssentialGeneNameDict = getGenesFromMCLStat(
-            self.MCLStatDict, self.combinedMCLDict, 0, 500)
+            self.MCLStatDict, self.combinedMCLDict, self.completeEssentialGeneNameDict, self.completeNonEssentialGeneNameDict, 0, 500)
         self.ValidMCLEssentialGeneNameDict, self.ValidMCLNonEssentialGeneNameDict = getGenesFromMCLStat(
-            self.MCLStatDict, self.combinedMCLDict, 501, 650)
+            self.MCLStatDict, self.combinedMCLDict, self.completeEssentialGeneNameDict, self.completeNonEssentialGeneNameDict, 501, 650)
         self.TestMCLEssentialGeneNameDict, self.TestMCLNonEssentialGeneNameDict = getGenesFromMCLStat(self.MCLStatDict,
                                                                                                       self.combinedMCLDict,
+                                                                                                      self.completeEssentialGeneNameDict, self.completeNonEssentialGeneNameDict,
                                                                                                       651, 1200)
-
-        # Building training, validation and testing data from the mcl gene cluster. This data is build by selecting
-        # one gene from one cluster so that genes are not homologous. This is expected to have lower accuracy.
-        self.TrainMCLDiffEssentialGeneNameDict, self.TrainingMCLDiffNonEssentialGeneNameDict = getGenesFromMCLStat(
-            self.MCLStatDict, self.combinedMCLDict, 0, 6000)
-        self.ValidMCLDiffEssentialGeneNameDict, self.ValidMCLDiffNonEssentialGeneNameDict = getGenesFromMCLStat(
-            self.MCLStatDict, self.combinedMCLDict, 6001, 8000)
-        self.TestMCLDiffEssentialGeneNameDict, self.TestMCLDiffNonEssentialGeneNameDict = getGenesFromMCLStat(
-            self.MCLStatDict, self.combinedMCLDict, 8001, 15000)
-
         # building feature table and training testing dataset
         if option == '-c':
             self.EssentialGeneFeatTable = getGeneFeatTable(feat, self.completeEssentialGeneNameDict, classLabel=1)
             self.NonEssentialGeneFeatTable = getGeneFeatTable(feat, self.completeNonEssentialGeneNameDict, classLabel=0)
 
-            f_essential_gene_length = open('Essential_gene_length.txt', 'w')
-            f_non_essential_gene_length = open('Non_essential_gene_length.txt', 'w')
+            f_essential_gene_length = open(str(self.ExpName) +  '_Essential_gene_length.txt', 'w')
+            f_non_essential_gene_length = open(str(self.ExpName) +  '_Non_essential_gene_length.txt', 'w')
 
-            self.trainingData, self.validationData, self.testingData = combineAndSplitData(self.EssentialGeneFeatTable,
+            self.trainingData, self.validationData, self.testingData, self.corr_feats = combineAndSplitData(self.EssentialGeneFeatTable,
                                                                                            self.NonEssentialGeneFeatTable,
                                                                                            trainingProp,
                                                                                            f_essential_gene_length,
@@ -156,10 +163,10 @@ class ProcessData(object):
             self.NonEssentialGeneFeatTable = getGeneFeatTable(feat, self.gramPositiveNonEssentialGeneNameDict,
                                                               classLabel=0)
 
-            f_gp_essential_gene_length = open('GP_essential_gene_length.txt', 'w')
-            f_gp_non_essential_gene_length = open('GP_non_essential_gene_length.txt', 'w')
+            f_gp_essential_gene_length = open(str(self.ExpName) +  '_GP_essential_gene_length.txt', 'w')
+            f_gp_non_essential_gene_length = open(str(self.ExpName) +  '_GP_non_essential_gene_length.txt', 'w')
 
-            self.trainingData, self.validationData, self.testingData = combineAndSplitData(self.EssentialGeneFeatTable,
+            self.trainingData, self.validationData, self.testingData, _ = combineAndSplitData(self.EssentialGeneFeatTable,
                                                                                            self.NonEssentialGeneFeatTable,
                                                                                            trainingProp,
                                                                                            f_gp_essential_gene_length,
@@ -167,16 +174,15 @@ class ProcessData(object):
             f_gp_essential_gene_length.close()
             f_gp_non_essential_gene_length.close()
 
-
         elif option == '-gn':
             self.EssentialGeneFeatTable = getGeneFeatTable(feat, self.gramNegativeEssentialGeneNameDict, classLabel=1)
             self.NonEssentialGeneFeatTable = getGeneFeatTable(feat, self.gramNegativeNonEssentialGeneNameDict,
                                                               classLabel=0)
 
-            f_gn_essential_gene_length = open('GN_essential_gene_length.txt', 'w')
-            f_gn_non_essential_gene_length = open('GN_non_essential_gene_length.txt', 'w')
+            f_gn_essential_gene_length = open(str(self.ExpName) +  '_GN_essential_gene_length.txt', 'w')
+            f_gn_non_essential_gene_length = open(str(self.ExpName) +  '_GN_non_essential_gene_length.txt', 'w')
 
-            self.trainingData, self.validationData, self.testingData = combineAndSplitData(self.EssentialGeneFeatTable,
+            self.trainingData, self.validationData, self.testingData, _ = combineAndSplitData(self.EssentialGeneFeatTable,
                                                                                            self.NonEssentialGeneFeatTable,
                                                                                            trainingProp,
                                                                                            f_gn_essential_gene_length,
@@ -209,72 +215,6 @@ class ProcessData(object):
             self.validationData = self.clusterValidData
             self.testingData = self.clusterTestData
 
-        elif option == '-cld':
-            self.TrainMCLEssentialGeneFeatTable = getGeneFeatTable(feat, self.TrainMCLDiffEssentialGeneNameDict,
-                                                                   classLabel=1)
-            self.TrainMCLNonEssentialGeneFeatTable = getGeneFeatTable(feat,
-                                                                      self.TrainingMCLDiffNonEssentialGeneNameDict,
-                                                                      classLabel=0)
-
-            self.ValidMCLEssentialGeneFeatTable = getGeneFeatTable(feat, self.ValidMCLDiffEssentialGeneNameDict,
-                                                                   classLabel=1)
-            self.ValidMCLNonEssentialGeneFeatTable = getGeneFeatTable(feat, self.ValidMCLDiffNonEssentialGeneNameDict,
-                                                                      classLabel=0)
-
-            self.TestMCLEssentialGeneFeatTable = getGeneFeatTable(feat, self.TestMCLDiffEssentialGeneNameDict,
-                                                                  classLabel=1)
-            self.TestMCLNonEssentialGeneFeatTable = getGeneFeatTable(feat, self.TestMCLDiffNonEssentialGeneNameDict,
-                                                                     classLabel=0)
-
-            self.clusterDiffTrainingData = resizeData(self.TrainMCLEssentialGeneFeatTable,
-                                                      self.TrainMCLNonEssentialGeneFeatTable)
-            self.clusterDiffValidData = resizeData(self.ValidMCLEssentialGeneFeatTable,
-                                                   self.ValidMCLNonEssentialGeneFeatTable)
-            self.clusterDiffTestData = resizeData(self.TestMCLEssentialGeneFeatTable,
-                                                  self.TestMCLNonEssentialGeneFeatTable)
-
-            self.trainingData = self.clusterDiffTrainingData
-            self.validationData = self.clusterDiffValidData
-            self.testingData = self.clusterDiffTestData
-
-        # taxon options
-        # elif option == '-B':
-        #     self.EssentialGeneFeatTable = getGeneFeatTable(feat, self.enterobacteriaceaeEssentialGeneNameDict, classLabel=1)
-        #     self.NonEssentialGeneFeatTable = getGeneFeatTable(feat, self.enterobacteriaceaeNonEssentialGeneNameDict, classLabel=0)
-        #
-        #     self.taxonTestingData = resizeData(self.EssentialGeneFeatTable, self.NonEssentialGeneFeatTable)
-        #
-        #     otherEssentialGeneNames = dict()
-        #     otherEssentialGeneNames.update(self.bacillalesEssentialGeneNameDict)
-        #     otherEssentialGeneNames.update(self.pseudomonadalesEssentialGeneNameDict)
-        #     otherEssentialGeneNames.update(self.mycolasmatalesEssentialGeneNameDict)
-        #
-        #     otherNonEssentialGeneNames = dict()
-        #     otherNonEssentialGeneNames.update(self.bacillalesNonEssentialGeneNameDict)
-        #     otherNonEssentialGeneNames.update(self.pseudomonadalesNonEssentialGeneNameDict)
-        #     otherNonEssentialGeneNames.update(self.mycolasmatalesNonEssentialGeneNameDict)
-        #
-        #     self.EssentialGeneFeatTable = getGeneFeatTable(feat, otherEssentialGeneNames, classLabel=1)
-        #     self.NonEssentialGeneFeatTable = getGeneFeatTable(feat, otherNonEssentialGeneNames, classLabel=0)
-        #
-        #     self.taxonTrainingData = resizeData(self.EssentialGeneFeatTable, self.NonEssentialGeneFeatTable)
-        #
-        # if option == '-B':
-        #     self.completeResizedData = self.taxonTrainingData
-        #
-        #     # shuffling the data to mix the data before splitting the dataset into training, validation and testing data
-        #     np.random.shuffle(self.completeResizedData)
-        #
-        #     # getting the shape of the reSized dataset to find the training, validation and testing size
-        #     row, col = self.completeResizedData.shape
-        #     trainingSize = int(row * trainingProp)
-        #     validationSize = int(row * validationProp)
-        #     testingSize = int(row * testingProp)
-        #
-        #     self.trainingData = self.completeResizedData[:trainingSize, :]
-        #     self.validationData = self.completeResizedData[trainingSize:(trainingSize + validationSize), :]
-        #     self.testingData = self.taxonTestingData[np.random.choice(self.taxonTestingData.shape[0], testingSize, replace=False), :]
-
     # returns the essential gene feature in a numpy matrix format
     def getEssentialGeneFeatMatrix(self):
         return np.array(self.EssentialGeneFeatTable)
@@ -303,6 +243,10 @@ class ProcessData(object):
     def getTestingData(self):
         return self.testingData
 
+    # return correlated features list
+    def getCorrFeats(self):
+        return self.corr_feats
+
     # returns scaled training dataset
     @staticmethod
     def getScaledData(dataMatrix):
@@ -318,7 +262,6 @@ def getGeneFeatTable(feat, geneNameDict, classLabel):
     if classLabel == 1:
         EssentialGeneLengthDict = feat.getEssentialGeneLengthFeatDict()
         EssentialKmerFeatDict = feat.getEssentialKmerFeatDict()
-        print EssentialKmerFeatDict
         EssentialGCFeatDict = feat.getEssentialGCContentFeatDict()
         EssentialCIARCSUFeatDict = feat.getEssentialCAIRCSUFeatDict()
         EssentialProteinFeatDict = feat.getEssentialProteinFeatDict()
@@ -338,7 +281,6 @@ def getGeneFeatTable(feat, geneNameDict, classLabel):
     if classLabel != 1:
         NonEssentialGeneLengthDict = feat.getNonEssentialGeneLengthFeatDict()
         NonEssentialKmerFeatDict = feat.getNonEssentialKmerFeatDict()
-        print NonEssentialKmerFeatDict
         NonEssentialGCFeatDict = feat.getNonEssentialGCContentFeatDict()
         NonEssentialCIARCSUFeatDict = feat.getNonEssentialCAIRCSUFeatDict()
         NonEssentialProteinFeatDict = feat.getNonEssentialProteinFeatDict()
@@ -359,8 +301,6 @@ def getGeneFeatTable(feat, geneNameDict, classLabel):
 
 
 def resizeData(table1, table2):
-    print len(table1)
-    print len(table2)
     matrix1 = np.array(table1)
     matrix2 = np.array(table2)
 
@@ -374,6 +314,3 @@ def resizeData(table1, table2):
     reSizedMatrix2 = matrix2[np.random.choice(matrix2Row, numSampleToSelect, replace=False), :]
 
     return np.vstack((reSizedMatrix1, reSizedMatrix2))
-
-    # this is just for the experiment of imbalanced dataset
-    # return np.vstack((matrix1, matrix2))

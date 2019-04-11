@@ -1,9 +1,11 @@
 # author: Abid Hasan
 # University of california Riverside
+# April 2019
 
 # importing packages
 import sys
 import time
+import os
 
 # import from other class
 from AnalyzeParameter import *
@@ -45,7 +47,7 @@ def main():
     feat.getFeatures(paramDict['bins'])
 
     # get features and build training/testing dataset
-    data = ProcessData(read, feat, paramDict['trainingProp'], option)
+    data = ProcessData(read, feat, paramDict['trainingProp'], option, experimentName)
 
     # creating file to store evaluation statistics
     fWrite = open(experimentName + '.tab', 'w')
@@ -80,6 +82,7 @@ def main():
     f_th = open(experimentName + 'Thresholds.txt', 'a')
 
     for i in range(0, paramDict['repeat']):
+        print 'Iteration', i
         model = BuildDNNModel(data, paramDict['bins'], f_tp, f_fp, f_th)
         evaluationDict = model.getEvaluationStat()
 
@@ -98,9 +101,15 @@ def main():
         evaluationValueForAvg[value] = float(evaluationValueForAvg[value]) / paramDict['repeat']
 
     writeEvaluationStat(evaluationValueForAvg, fWrite, 'Avg.')
+    fWrite.write("\n")
+    fWrite.write('Batch size:' + str(evaluationDict['batch_size']) + '\n')
+    fWrite.write('Activation:' + str(evaluationDict['activation']) + '\n')
+    fWrite.write('Dropout:' + str(evaluationDict['dropout']) + '\n')
+
     end_time = time.time()
     fWrite.write("Execution time: " + str(end_time - start_time) + " sec.")
     fWrite.close()
+    # f_imp.close()
 
     f_tp.close()
     f_fp.close()

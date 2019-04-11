@@ -13,13 +13,11 @@ class ReadFiles(object):
         self.essential_gene_seq_file = param.getEssentialGeneSeqFilePath()
         self.essential_gene_anno_file = param.getEssentialGeneAnnotFilePath()
         self.essential_aa_file = param.getEssentialAAFilePath()
-        # self.essential_mcl_file = param.getEssentialMCLFilePath()
         self.essential_hit_file = param.getEsentialHitFilePath()
 
         self.non_essential_gene_seq_file = param.getNonEssentialGeneSeqFilePath()
         self.non_essential_gene_anno_file = param.getNonEssentialGeneAnnotFilePath()
         self.non_essential_aa_file = param.getNonEssentialAAFilePath()
-        # self.non_essential_mcl_file = param.getNonEssentialMCLFilePath()
         self.non_essential_hit_file = param.getNonEssentialHitFilePath()
 
         self.combined_mcl_file = param.getCombinedMCLFilePath()
@@ -159,19 +157,6 @@ class ReadFiles(object):
 
         return self.essentialProteinSeqDict
 
-    # return essential gene MCL information
-    # def getEssentialMCLInfo(self):
-    #     clusterID = 1
-    #     with open(self.essential_mcl_file) as f:
-    #         for line in f:
-    #             line = line.strip()
-    #             cols = line.split()
-    #
-    #             self.essentialMCLDict[clusterID] = cols[1:]
-    #             clusterID += 1
-    #
-    #     return self.essentialMCLDict
-
     # returns the MCL information of the essential genes
     def getEssentialHitInfo(self):
         HitInfo = pd.read_table(self.essential_hit_file, sep='\t', header='infer')
@@ -205,7 +190,7 @@ class ReadFiles(object):
                 self.accessionWiseNonEssentialGeneCount[row['#Conditions']] += 1
 
         # for plot
-        print len(self.accessionWiseNonEssentialGeneCount)
+        # print len(self.accessionWiseNonEssentialGeneCount)
         fopen_ness_gene_count = open('Accession_wise_ness_gene_count.txt', 'w')
         for accession in self.accessionWiseNonEssentialGeneCount:
             fopen_ness_gene_count.write(str(accession) + '\t' + str(self.accessionWiseNonEssentialGeneCount[accession]) + '\n')
@@ -239,20 +224,6 @@ class ReadFiles(object):
     # returns cluster (MCL) statistics
     def getMCLStatistics(self):
         return self.clusterStatInfoDict
-
-    # return non_essential gene MCL information
-    # def getNonEssentialMCLInfo(self):
-    #     clusterID = 1
-    #     with open(self.essential_mcl_file) as f:
-    #         for line in f:
-    #             line = line.strip()
-    #             cols = line.split()
-    #
-    #             self.nonEssentialMCLDict[clusterID] = cols[1:]
-    #             clusterID += 1
-    #
-    #     return self.nonEssentialMCLDict
-
 
 # return non_essential gene MCL information
 def processCombinedMCLInfo(mcl_file):
