@@ -18,7 +18,7 @@ DeeplyEssential takes 6 parameters
 	- A essential gene sequence file
 	- A essential protein sequence file
 	- An gene annotation file
-2. Non Essential gene directory path. This file contains
+2. Non Essential gene directory path. This directory contains
 	- A essential gene sequence file
 	- A essential protein sequence file
 	- An gene annotation file
