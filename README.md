@@ -11,6 +11,9 @@ DeeplyEssential is a Convolutional neural network for the identification of Esse
 5. scikit-learn==0.19.1
 6. tensorflow==1.6.0
 
+<h3>Hardware </h3>
+Titan GTX 1080 Ti GPU
+
 <h3>Parameters</h3>
 
 DeeplyEssential takes 6 parameters
